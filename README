@@ -6,5 +6,8 @@ Requires:
 This script will update symlinks specified inside it to the latest ssl certificates from the relevant accounts on the server.
 Designed for use with cPanel's AutoSSL. This was created to combat Nginx requiring a direct link to the SSL Certificate while in use as a reverse proxy for Varnish Caching.
 
-Currently Configuration is entirely manual inside the python script file.
+As an addition the script will now also add the ca bundle from cPanel, using the cPanel UAPI, to the bottom of the certificate file. This is to prevent certificate incomplete errors
+and to prevent errors on mobile devices where the device's browser does not store copies of as many trusted Certificate Authorities as a desktop browser does.
+
+Currently Configuration is manual inside the python script file.
 
