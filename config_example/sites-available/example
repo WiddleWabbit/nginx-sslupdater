@@ -1,0 +1,54 @@
+# Added this section due to recommendation on http://www.techytalk.info/magento-2-behind-varnish-reverse-proxy/
+# Vagrant - support HTTPS behind reverse proxy
+
+map $http_x_forwarded_proto $fastcgi_https {
+
+    default $https;
+    https on;
+
+}
+# End Section
+
+# Defines a virtual server - Always used for Port 443 requests as it is the only one defined and therefore it
+#                            is the default. Otherwise if others were defined it would try to match the requests
+#                            hostname against each of the virtual servers server_names. If the match is not
+#                            found it uses the default (the first or specifically specified).
+server {
+  listen *:443 ssl;
+  server_name www.example.com example.com;                                                     ##################################################################
+
+    # Added this section due to recommendation on http://www.techytalk.info/magento-2-behind-varnish-reverse-proxy/
+    location ~ (index|get|static|report|404|503)\.php$ {
+    # Other location context directives...
+ 
+    # Support HTTPS behind reverse proxy
+    fastcgi_param HTTPS $fastcgi_https;
+ 
+    # Other location context directives...
+ 
+    include        fastcgi_params;
+    }
+    # End Section
+
+  ssl on;
+  # The symlinks should be setup beginning with the cpanel username in order to work with the nginx ssl update script
+  ssl_certificate /etc/nginx/symlinks/oemused_current_cert;                                     ##################################################################
+  ssl_certificate_key /etc/nginx/symlinks/oemused_current_key;                                  ##################################################################
+
+  # If you were using nginx as a load balancer you could define the redirect servers here in proxy_pass?
+  location / {
+
+    proxy_pass            http://127.0.0.1:80;
+    proxy_read_timeout    90;
+    proxy_connect_timeout 90;
+    proxy_redirect        off;
+
+    proxy_set_header      X-Real-IP $remote_addr;
+    proxy_set_header      X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header      X-Forwarded-Proto https;
+    proxy_set_header      X-Forwarded-Port 443;
+    proxy_set_header      Host $host;
+
+    add_header            X-Forwarded-Proto https;
+  }
+}
