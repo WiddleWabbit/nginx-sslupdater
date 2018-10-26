@@ -126,4 +126,4 @@ else:
 #   Restart nginx by calling nginx_restart script
         print 'Attempt nginx restart\n'
         sys.stdout.flush()
-        subprocess.call('/root/scripts/cron/nginx/nginx_restart')
+        subprocess.call('/root/scripts/cron/nginx/nginx_reload')
