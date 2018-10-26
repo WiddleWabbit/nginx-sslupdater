@@ -89,4 +89,6 @@ if countString(certificate, 'BEGIN CERTIFICATE') < 2:
 
     print('CA Bundle Not Included')
     addBundle(options.user, certificate)
+
+    # Reloads nginx configuration, can be removed on servers not utilising nginx ssl termination
     subprocess.call('/root/scripts/cron/nginx/nginx_reload')
