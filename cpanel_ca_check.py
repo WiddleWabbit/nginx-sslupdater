@@ -87,6 +87,7 @@ certificate = lastModified(usrdir_cert, '*.crt')
 
 if countString(certificate, 'BEGIN CERTIFICATE') < 2:
 
+    print('User: ' + options.user)
     print('CA Bundle Not Included')
     addBundle(options.user, certificate)
 
