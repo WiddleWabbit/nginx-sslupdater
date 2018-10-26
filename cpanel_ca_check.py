@@ -46,11 +46,19 @@ def addBundle(user, cert_file):
         cert_file = cert_file.split('/')[-1]
 
         # Fetch the cabundle using the UAPI
-        print('Fetching cabundle from cPanel using UAPI')
         uapi_cmd = "uapi --user=" + user + " SSL fetch_cert_info id=" + cert_file
         process = subprocess.Popen(uapi_cmd.split(), stdout=subprocess.PIPE)
         output, err = process.communicate()
 
+        # Check if this is a self signed certificate, if it is just exit as we dont want to check them for an ca bundle
+        if 'is_self_signed: 1' in output:
+            return
+
+        # We only want a printed output if something is actually going to happen so we start printing here when we know we are going to attempt to add the bundle
+        # By doing this we prevent unnessesary emails when running things by cron
+        print('User: ' + options.user)
+        print('CA Bundle Not Included')
+        print('Found cabundle from cPanel using UAPI')
         # Seperate out the response and get the bundles from the response
         output = output.split()
         bundle_begin = output.index('cabundle:')
@@ -78,6 +86,9 @@ def addBundle(user, cert_file):
         export.close()
         print('Appended to file successfully')
 
+        # Reloads nginx configuration, can be removed on servers not utilising nginx ssl termination
+        subprocess.call('/root/scripts/cron/nginx/nginx_reload')
+
     except Exception as e:
         print(e)
         logging.error(traceback.format_exc())
@@ -87,9 +98,6 @@ certificate = lastModified(usrdir_cert, '*.crt')
 
 if countString(certificate, 'BEGIN CERTIFICATE') < 2:
 
-    print('User: ' + options.user)
-    print('CA Bundle Not Included')
+    # Try to add the ca bundle because this file only has one certificate in it and is therefore missing the bundle
     addBundle(options.user, certificate)
 
-    # Reloads nginx configuration, can be removed on servers not utilising nginx ssl termination
-    subprocess.call('/root/scripts/cron/nginx/nginx_reload')
